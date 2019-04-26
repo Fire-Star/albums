@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.project.albumss.mapper.UserDao">
+
+	<!-- 根据OpenId查询用户信息 -->
+	<select id="findUserByOpenId" parameterType="String" resultType="Users">
+		SELECT
+			openId,
+			image,
+			IF(custom_name is NULL||custom_name=""||custom_name="null",nickName,custom_name) "nickName",
+			brief,
+			user_type,
+			background_image,
+			sex,
+			fans,
+			favour_user,
+			location,
+			custom_name,
+			is_hide,
+			waterMark
+		 FROM users WHERE openId= #{openId}
+	</select>
+	
+	<!-- 根据openId，判断用户是否存在 -->
+	<select id="isExist" parameterType="String" resultType="Integer">
+		select count(*) from users where openId=#{openId}
+	</select>
+	<!-- 新增用户 -->
+	<insert id="addUser" parameterType="Users">
+		insert into users(
+			openId,
+			image,
+			nickName,
+			brief,
+			user_type,
+			sex,
+			fans,
+			favour_user
+		)values(
+			#{openId},
+			#{image},
+			#{nickName},
+			#{brief},
+			#{user_type},
+			#{sex},
+			#{fans},
+			#{favour_user}
+		)
+	</insert>
+	<!-- 根据openId,获取先前的图片 -->
+	<select id="findImgByOpenId" parameterType="String" resultType="String">
+		select image from users where openId = #{openId}
+	</select>
+	<!-- 修改用户 -->
+	<update id="modifyUser" parameterType="Users">
+		update users set
+			nickName=#{nickName},
+			waterMark=#{waterMark},
+			<if test="image!=null and image!=''">
+				image=#{image},
+			</if>
+			brief=#{brief},
+			user_type=#{user_type},
+			<if test="background_image!=null and background_image!=''">
+				background_image=#{background_image},
+			</if>
+			<if test="location!=null and location!=''">
+				location=#{location},
+			</if>
+			<!-- <if test="custom_name!=null and custom_name!=''"> -->
+				custom_name=#{custom_name},
+			<!-- </if> -->
+			is_hide=#{is_hide},
+			sex=#{sex}
+		where openId=#{openId}
+	</update>
+	<!-- 根据openId，查询用户发帖数 -->
+	<select id="queryPostNum" parameterType="String" resultType="Integer">
+		select count(*) from post where open_id=#{openId}
+	</select>
+	<select id="queryBgImgById" parameterType="String" resultType="String">
+		select background_image from users where openId=#{openId}
+	</select>
+	
+	<!-- 根据openId，修改用户类型 -->
+	<update id="updateUserType" parameterType="Users">
+		update users set
+			<if test="location!=null and location!=''">
+				location=#{location},
+			</if>
+			<if test="custom_name!=null and custom_name!=''">
+				custom_name=#{custom_name},
+			</if>
+			<if test="is_hide!=null and is_hide!=''">
+				is_hide=#{is_hide},
+			</if>
+			user_type=#{user_type}
+		where openId=#{openId}
+	</update>
+	
+</mapper>

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.project.albumss.mapper.PostDao">
+
+	<!-- 获取所有的帖子 分页  根据点赞数排序 -->
+	<select id="getAllPost" resultType="Post" parameterType="cn.project.albumss.mybatis.Page">
+		select 
+			a.id,
+			a.open_id,
+			a.image,
+			a.love_num,
+			a.post_lau,
+			a.time,
+			a.scale_image,
+			a.quality_image,
+			s.image "user_image",
+			s.user_type,
+			s.brief,
+			IF(s.custom_name is NULL||s.custom_name=""||s.custom_name="null",s.nickName,s.custom_name) "user_nick"
+		from post a left join users s on a.open_id =s.openid
+			<if  test="params.bo.queryType==0">
+				where 1=1
+			</if>
+			<if  test="params.bo.queryType==1">
+				where a.open_id in (select openId from users where user_type=1)
+			</if>
+			<if  test="params.bo.queryType==2">
+				where a.open_id in (select openId from users where user_type=0)
+			</if>
+			<if  test="params.bo.queryType==3">
+				where a.open_id in (select fans_openid from user_fans where user_openid=#{params.bo.open_id})
+			</if>
+			 order by a.love_num desc,a.time DESC
+	</select>
+	<!-- 获取所有的帖子 分页  根据时间排序 -->
+	<select id="getAllPostByTime" resultType="Post" parameterType="cn.project.albumss.mybatis.Page">
+		select 
+			a.id,
+			a.open_id,
+			a.image,
+			a.love_num,
+			a.post_lau,
+			a.time,
+			a.scale_image,
+			a.quality_image,
+			s.image "user_image",
+			s.user_type,
+			s.brief,
+			IF(s.custom_name is NULL||s.custom_name=""||s.custom_name="null",s.nickName,s.custom_name) "user_nick"
+		from post a left join users s on a.open_id =s.openid
+			<if  test="params.bo.queryType==0">
+				where 1=1
+			</if>
+			<if  test="params.bo.queryType==1">
+				where a.open_id in (select openId from users where user_type=1)
+			</if>
+			<if  test="params.bo.queryType==2">
+				where a.open_id in (select fans_openid from user_fans where user_openid=#{openId})
+			</if>
+			 order by a.time DESC
+	</select>
+	
+	<select id="getAllPostIsLove" parameterType="cn.project.albumss.mybatis.Page" resultType="Post">
+		select 
+			a.id,
+			a.open_id,
+			a.image,
+			a.love_num,
+			a.post_lau,
+			a.time,
+			a.scale_image,
+			a.quality_image,
+			s.image "user_image",
+			s.user_type,
+			s.brief,
+			IF(s.custom_name is NULL||s.custom_name=""||s.custom_name="null",s.nickName,s.custom_name) "user_nick"
+		from user_love_post b left join post a on b.postId =a.id
+		                      left join users s on a.open_id = s.openId
+		where b.openId=#{params.bo.open_id}
+		order by b.id DESC
+			
+	</select>
+		
+	<select id="searchPost" parameterType="cn.project.albumss.mybatis.Page" resultType="Post">
+		select 
+			a.id,
+			a.open_id,
+			a.image,
+			a.love_num,
+			a.post_lau,
+			a.time,
+			a.scale_image,
+			a.quality_image,
+			s.image "user_image",
+			s.user_type,
+			s.brief,
+			IF(s.custom_name is NULL||s.custom_name=""||s.custom_name="null",s.nickName,s.custom_name) "user_nick"
+		from post a left join users s on a.open_id = s.openId
+		where a.post_lau like '%${params.bo.post_lau}%' or  
+			  a.open_id in (select openId from users where nickName like '%${params.bo.post_lau}%' or custom_name like '%${params.bo.post_lau}%')
+		order by a.time DESC
+	</select>
+	
+	<!-- 根据openId 分页查询帖子 -->
+	<select id="getPostByOpenId" resultType="Post" parameterType="cn.project.albumss.mybatis.Page">
+		select 
+			a.id,
+			a.open_id,
+			a.image,
+			a.love_num,
+			a.post_lau,
+			a.time,
+			a.scale_image,
+			a.quality_image
+		from post a 
+		where a.open_id=#{params.bo.open_id}
+		order by a.time DESC
+	</select>
+	
+	<!-- 新增帖子 -->
+	<insert id="addPost" parameterType="Post">
+		insert into post(
+			open_id,
+			image,
+			love_num,
+			post_lau,
+			time,
+			scale_image,
+			quality_image
+		)values(
+			#{open_id},
+			#{image},
+			#{love_num},
+			#{post_lau},
+			#{time},
+			#{scale_image},
+			#{quality_image}
+		)
+	</insert>
+	<!-- 执行点赞数更新+1操作 -->
+	<update id="addLoveNum" parameterType="String">
+		update post set
+			love_num=love_num+1
+		where  id=#{postId}
+	</update>
+	<update id="reduceLoveNum" parameterType="String">
+		update post set
+			love_num=love_num-1
+		where id=#{postId}
+	</update>
+	
+	<select id="queryLoveNum" parameterType="Integer" resultType="Integer">
+		select love_num from post where id=#{id}
+	</select>
+	<select id="getAllFirstPic" resultType="String">
+		select image from post
+	</select>
+	<select id="getFirstPicByOpenId" resultType="String" parameterType="String">
+		select image from post where open_id=#{openId} order by time desc
+	</select>
+	<delete id="deleteByOpenId">
+		delete from post where id=#{id}
+	</delete>
+	
+	<delete id="deleteUserLovePost">
+		delete from user_love_post where openId=#{openId} and postId=#{postId}
+	</delete>
+	
+	<insert id="addUserLovePost">
+		insert into user_love_post(
+			openId,
+			postId
+		)values(
+			#{openId},
+			#{postId}
+		)
+	</insert>
+	<select id="isExitUserLovePost" resultType="int">
+		select count(*) from user_love_post where openId=#{openId} and postId=#{postId}
+	</select>
+	
+	<select id="findImageById" resultType="String" parameterType="String">
+		select image from post where id = #{id}
+	</select>
+	
+	<select id="getPostById" resultType="java.lang.Integer" parameterType="java.lang.String">
+		SELECT COUNT(*) num FROM user_love_post WHERE openId = #{openid} AND postId = #{postId};
+	</select>
+</mapper>

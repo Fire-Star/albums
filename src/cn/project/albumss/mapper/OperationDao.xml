@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.project.albumss.mapper.OperationDao">
+
+	<insert id="addFollow">
+		insert into user_fans(
+			user_openid,
+			fans_openid
+		)values(
+			#{openId},
+			#{fansOpenId}
+		)
+	</insert>
+	
+	<update id="addFansNum" parameterType="String">
+		update users set fans=fans+1 where openId=#{fansOpenId}
+	</update>
+	
+	<update id="reduceFansNum" parameterType="String">
+		update users set fans=fans-1 where openId=#{fansOpenId}
+	</update>
+	
+	<update id="addFollowNum" parameterType="String">
+		update users set favour_user=favour_user+1 where openId=#{openId}
+	</update>
+	
+	<update id="reduceFollowNum" parameterType="String">
+		update users set favour_user=favour_user-1 where openId=#{openId}
+	</update>
+	
+	<select id="isFollow" resultType="int">
+		select count(*) from user_fans where user_openid=#{openId} and fans_openid=#{fansOpenId}
+	</select>
+	
+	<delete id="reduceFollow">
+		delete from user_fans where user_openid=#{openId} and fans_openid=#{fansOpenId}
+	</delete>
+	
+	<insert id="addMessageInfo" parameterType="cn.project.albumss.pojo.MessagePo">
+		insert into message(
+			from_openId,
+			to_openId,
+			time,
+			type,
+			content
+		)values(
+			#{from_openId},
+			#{to_openId},
+			#{time},
+			#{type},
+			#{content}
+		)
+	</insert>
+	
+	<select id="queryMessageInfos" parameterType="cn.project.albumss.mybatis.Page" resultType="MessagePo">
+		select a.*,b.image,b.nickName from message a left join users b on a.from_openId=b.openId 
+		where a.to_openId=#{params.bo.to_openId} order by a.time desc
+	</select>
+	
+	<select id="queryMessageByOpenIdFans" parameterType="cn.project.albumss.mybatis.Page" resultType="MessagePo">
+		select a.*,b.image,b.nickName from message a left join users b on a.from_openId=b.openId 
+		where type=2 and to_openId=#{params.bo.to_openId}
+		order by a.time desc
+	</select>
+	
+	<select id="queryMessageByOpenIdFollow" parameterType="cn.project.albumss.mybatis.Page" resultType="MessagePo">
+		select a.*,b.image,b.nickName from message a left join users b on a.to_openId=b.openId 
+		where type=2 and from_openId=#{params.bo.from_openId}
+		order by a.time desc
+	</select>
+	
+	<delete id="deleteMessageInfo" parameterType="cn.project.albumss.pojo.MessagePo">
+		delete from message where from_openId=#{from_openId} and to_openId=#{to_openId} and type = #{type}
+	</delete>
+	
+	<update id="updateIsRead" parameterType="String">
+		update message set
+			is_read=1
+		where id=#{id}
+	</update>
+	
+	<select id="queryIsReading" parameterType="String" resultType="int">
+		select count(*) from message where to_openId = #{to_openId} and is_read = 0
+	</select>
+	
+	<update id="updateIsReading" parameterType="String">
+		update message set
+			is_read=1 
+		where to_openId=#{to_openId} and type!=3
+	</update>
+	
+	<select id="queryIslove" parameterType="String" resultType="int">
+		select count(*) from user_love_post 
+			where openId=#{openId} and postId=#{id}
+	</select>
+</mapper>
